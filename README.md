@@ -5,6 +5,7 @@
 + go mod init mygrpc
 + go get -u google.golang.org/grpc
 + go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
++ brew install grpcurl
 
 
 ### コード生成コマンド(.protoファイル配下で実行)
