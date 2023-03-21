@@ -39,3 +39,10 @@ $ grpcurl -plaintext -d '{"name": "hsaki"}' localhost:8080 myapp.GreetingService
   "message": "[4] Hello, hsaki!"
 }
 ```
+
+```
+grpcurl -plaintext -d '{"name": "hsaki"}{"name": "a-san"}{"name": "b-san"}{"name": "c-san"}{"name": "d-san"}' localhost:8080 myapp.GreetingService.HelloClientStream
+{
+  "message": "Hello, [hsaki a-san b-san c-san d-san]!"
+}
+```
