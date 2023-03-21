@@ -41,8 +41,27 @@ $ grpcurl -plaintext -d '{"name": "hsaki"}' localhost:8080 myapp.GreetingService
 ```
 
 ```
-grpcurl -plaintext -d '{"name": "hsaki"}{"name": "a-san"}{"name": "b-san"}{"name": "c-san"}{"name": "d-san"}' localhost:8080 myapp.GreetingService.HelloClientStream
+$ grpcurl -plaintext -d '{"name": "hsaki"}{"name": "a-san"}{"name": "b-san"}{"name": "c-san"}{"name": "d-san"}' localhost:8080 myapp.GreetingService.HelloClientStream
 {
   "message": "Hello, [hsaki a-san b-san c-san d-san]!"
+}
+```
+
+```
+$ grpcurl -plaintext -d '{"name": "hsaki"}{"name": "a-san"}{"name": "b-san"}{"name": "c-san"}{"name": "d-san"}' localhost:8080 myapp.GreetingService.HelloBiStreams
+{
+  "message": "Hello, hsaki!"
+}
+{
+  "message": "Hello, a-san!"
+}
+{
+  "message": "Hello, b-san!"
+}
+{
+  "message": "Hello, c-san!"
+}
+{
+  "message": "Hello, d-san!"
 }
 ```
