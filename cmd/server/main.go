@@ -33,7 +33,12 @@ func main() {
 	}
 
 	// 2. gRPCサーバーを作成
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.ChainStreamInterceptor(
+			myStreamServerInterceptor1,
+			myStreamServerInterceptor2,
+		),
+	)
 
 	// 3. gRPCサーバーにGreetingServiceを登録
 	hellopb.RegisterGreetingServiceServer(s, NewMyServer())
@@ -111,4 +116,73 @@ func (s *myServer) HelloBiStreams(stream hellopb.GreetingService_HelloBiStreamsS
 			return err
 		}
 	}
+}
+
+func myUnaryServerInterceptor1(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	log.Println("[pre] my unary server interceptor 1: ", info.FullMethod) // ハンドラの前に割り込ませる前処理
+	res, err := handler(ctx, req)                                         // 本来の処理
+	log.Println("[post] my unary server interceptor 1: ", res)            // ハンドラの後に割り込ませる後処理
+	return res, err
+}
+
+func myUnaryServerInterceptor2(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	log.Println("[pre] my unary server interceptor 2: ", info.FullMethod, req)
+	res, err := handler(ctx, req) // 本来の処理
+	log.Println("[post] my unary server interceptor 2: ", res)
+	return res, err
+}
+
+func myStreamServerInterceptor1(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	// ストリームがopenされたときに行われる前処理
+	log.Println("[pre stream] my stream server interceptor 1: ", info.FullMethod)
+
+	err := handler(srv, &myServerStreamWrapper1{ss}) // 本来のストリーム処理
+
+	// ストリームがcloseされるときに行われる後処理
+	log.Println("[post stream] my stream server interceptor 1: ")
+	return err
+}
+
+type myServerStreamWrapper1 struct {
+	grpc.ServerStream
+}
+
+func (s *myServerStreamWrapper1) RecvMsg(m interface{}) error {
+	// ストリームから、リクエストを受信
+	err := s.ServerStream.RecvMsg(m)
+	// 受信したリクエストを、ハンドラで処理する前に差し込む前処理
+	if !errors.Is(err, io.EOF) {
+		log.Println("[pre message] my stream server interceptor 1: ", m)
+	}
+	return err
+}
+
+func (s *myServerStreamWrapper1) SendMsg(m interface{}) error {
+	// ハンドラで作成したレスポンスを、ストリームから返信する直前に差し込む後処理
+	log.Println("[post message] my stream server interceptor 1: ", m)
+	return s.ServerStream.SendMsg(m)
+}
+
+func myStreamServerInterceptor2(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	log.Println("[pre stream] my stream server interceptor 2: ", info.FullMethod)
+	err := handler(srv, &myServerStreamWrapper2{ss}) // 本来のストリーム処理
+	log.Println("[post stream] my stream server interceptor 2: ")
+	return err
+}
+
+type myServerStreamWrapper2 struct {
+	grpc.ServerStream
+}
+
+func (s *myServerStreamWrapper2) RecvMsg(m interface{}) error {
+	err := s.ServerStream.RecvMsg(m)
+	if !errors.Is(err, io.EOF) {
+		log.Println("[pre message] my stream server interceptor 2: ", m)
+	}
+	return err
+}
+
+func (s *myServerStreamWrapper2) SendMsg(m interface{}) error {
+	log.Println("[post message] my stream server interceptor 2: ", m)
+	return s.ServerStream.SendMsg(m)
 }
