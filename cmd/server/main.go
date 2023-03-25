@@ -56,8 +56,11 @@ func main() {
 }
 
 func (s *myServer) Hello(ctx context.Context, req *hellopb.HelloRequest) (*hellopb.HelloResponse, error) {
-	// リクエストからnameフィールドを取り出して
-	// "Hello, [名前]!"というレスポンスを返す
+	// stat := status.New(codes.Unknown, "unknown error occurred")
+	// stat, _ = stat.WithDetails(&errdetails.DebugInfo{
+	// 	Detail: "detail reason of err",
+	// })
+	// err := stat.Err()
 	return &hellopb.HelloResponse{
 		Message: fmt.Sprintf("Hello, %s!", req.GetName()),
 	}, nil
